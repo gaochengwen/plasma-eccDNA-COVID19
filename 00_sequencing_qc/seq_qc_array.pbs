@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -N eccQC
+#PBS -q batch
+#PBS -l nodes=1:ppn=8
+#PBS -l mem=32gb
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/seq_qc/logs/
+#PBS -V
+
+set -euo pipefail
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/seq_qc
+mkdir -p "$ROOT/logs"
+cd "$ROOT"
+
+# Each job takes every Nth line of the sample list (SHARD of NSHARD).
+n=0
+while read -r s g; do
+  n=$((n+1))
+  if [ $(( (n - 1) % NSHARD )) -ne "$SHARD" ]; then continue; fi
+  if [ -s "$ROOT/markdup/${s}.markdup.txt" ] && [ -s "$ROOT/flagstat/${s}.flagstat.txt" ]; then
+    echo "SKIP $s (already done)"; continue
+  fi
+  echo "=== $s ($g) $(date -Is) ==="
+  bash "$ROOT/run_seq_qc.sh" "$s" "$g"
+done < "$ROOT/samples.tsv"
+echo "SHARD $SHARD COMPLETE $(date -Is)"

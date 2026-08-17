@@ -1,0 +1,5 @@
+filename	source_url	bytes	sha256	server_file_path	status
+hg19ToHg38.over.chain.gz	https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz	227698	5c0598e500ceb5a78c73086929e8ef993aec309bcafb595139b53d440b125a1d	/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference/hg19ToHg38.over.chain.gz	present
+hg38.chrom.sizes	https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes	11672	e1d9152418038457a959e949d99c9caf7ae3e4f87cfbb4ffe7d8b9a54ba1202b	/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference/hg38.chrom.sizes	present
+hg38-blacklist.v2.bed.gz	https://raw.githubusercontent.com/Boyle-Lab/Blacklist/master/lists/hg38-blacklist.v2.bed.gz	5867	c92e763af17271446194991e71917ac220593a5a3d40a06667be24178ef08cf2	/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference/hg38-blacklist.v2.bed.gz	present
+hg38.gap.txt.gz	https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/gap.txt.gz	12368	c466135bf8553f007960b3bd7d747343d014143a0415c127d1452bbe484bf1c1	/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference/hg38.gap.txt.gz	present

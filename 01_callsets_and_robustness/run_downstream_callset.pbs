@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+#PBS -N CF_downstream
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=64gb
+#PBS -l walltime=48:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+trap 'rc=$?; echo "ERROR line=${LINENO} rc=${rc} command=${BASH_COMMAND}" >&2; exit "$rc"' ERR
+
+: "${CALLSET:?Submit with qsub -v CALLSET=<callset>}"
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+PROJECT=/gpfs/data/gao/Covid-eccDNA
+MANIFEST=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/inputs/eccdna_sample_manifest.tsv
+CALLSET_DIR="$ROOT/callsets/$CALLSET"
+ADAPTER="$ROOT/work/downstream_projects/$CALLSET"
+OUTPUT="$ROOT/downstream/$CALLSET"
+PYTHON=/public/opt/miniforge3_2024/bin/python
+ECCGENE_SCRIPT=/gpfs/data/gao/Covid-eccDNA/Revise/eccGene/scripts/run_eccgene_reanalysis.py
+CHROMATIN_SCRIPT=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/scripts/run_chromatin_hg38_analysis.py
+CHROMATIN_REFERENCE=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference
+LIFTOVER=/gpfs/softwares/ricopili202511/dependencies/liftover/liftOver
+LOG="$ROOT/logs/downstream_${CALLSET}.log"
+
+wait_for_file() {
+    local path=$1
+    local label=$2
+    local sample=${3:-NA}
+    local attempt
+    for attempt in $(seq 1 12); do
+        [[ -f "$path" ]] && return 0
+        sleep 10
+    done
+    echo "missing_file_after_wait label=$label sample=$sample host=$(hostname) path=$path" >&2
+    return 1
+}
+
+mkdir -p "$ADAPTER"/{covid,normal,covid_bam,normal_bam} "$OUTPUT" "$ROOT/logs"
+: > "$LOG"
+exec >> "$LOG" 2>&1
+
+echo "started_utc=$(date -u +%FT%TZ)"
+echo "callset=$CALLSET"
+echo "host=$(hostname)"
+test -d "$CALLSET_DIR"
+test -s "$MANIFEST"
+
+while read -r sample group original_bed bam bam_exists mapped; do
+    [[ "$sample" == "sample_id" ]] && continue
+    source_bed="$CALLSET_DIR/${sample}_circle_site.bed"
+    wait_for_file "$source_bed" source_bed "$sample"
+    wait_for_file "$bam" bam "$sample"
+    if [[ "$group" == "COVID" ]]; then
+        bed_dir="$ADAPTER/covid"
+        bam_dir="$ADAPTER/covid_bam"
+    else
+        bed_dir="$ADAPTER/normal"
+        bam_dir="$ADAPTER/normal_bam"
+    fi
+    ln -sfn "$source_bed" "$bed_dir/${sample}_circle_site.bed"
+    ln -sfn "$bam" "$bam_dir/sorted_${sample}_circle.bam"
+    if [[ -f "${bam}.bai" ]]; then
+        ln -sfn "${bam}.bai" "$bam_dir/sorted_${sample}_circle.bam.bai"
+    elif [[ -f "${bam%.bam}.bai" ]]; then
+        ln -sfn "${bam%.bam}.bai" "$bam_dir/sorted_${sample}_circle.bai"
+    fi
+done < "$MANIFEST"
+echo "manifest_links_done=$(date -u +%FT%TZ)"
+ln -sfn "$PROJECT/enhancer" "$ADAPTER/enhancer"
+
+echo "adapter_beds=$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)"
+test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+
+mkdir -p "$OUTPUT/eccGene"
+"$PYTHON" "$ECCGENE_SCRIPT" \
+  --metadata "$PROJECT/covid/sample_data.csv" \
+  --covid-bed-dir "$ADAPTER/covid" \
+  --hc-bed-dir "$ADAPTER/normal" \
+  --refgene "$PROJECT/eccDNA_abundance3/refGene.txt" \
+  --output-dir "$OUTPUT/eccGene" \
+  --main-definition junction
+
+mkdir -p "$OUTPUT/chromatin/reference"
+cp -p \
+  "$CHROMATIN_REFERENCE/hg19ToHg38.over.chain.gz" \
+  "$CHROMATIN_REFERENCE/hg38-blacklist.v2.bed.gz" \
+  "$CHROMATIN_REFERENCE/hg38.chrom.sizes" \
+  "$CHROMATIN_REFERENCE/hg38.gap.txt.gz" \
+  "$OUTPUT/chromatin/reference/"
+
+module load bedtools2-2.28.0 >/dev/null 2>&1 || true
+module load samtools-1.17 >/dev/null 2>&1 || true
+"$PYTHON" "$CHROMATIN_SCRIPT" \
+  --stage analyze \
+  --project-dir "$ADAPTER" \
+  --outdir "$OUTPUT/chromatin" \
+  --liftover "$LIFTOVER" \
+  --samtools samtools
+
+sha256sum "$ECCGENE_SCRIPT" "$CHROMATIN_SCRIPT" > "$OUTPUT/downstream_script_sha256.tsv"
+{
+    echo "PASS"
+    echo "callset=$CALLSET"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$OUTPUT/downstream_validation.txt"
+echo "completed_utc=$(date -u +%FT%TZ)"

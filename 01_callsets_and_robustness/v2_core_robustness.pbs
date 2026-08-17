@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+#PBS -N v2_core_robust
+#PBS -q batch
+#PBS -l nodes=cu16:ppn=1
+#PBS -l mem=24gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_core_robustness.log
+#PBS -V
+#
+# S3 -- rebuild the call-set robustness framework with methods as the primary
+# call set and the five-target validation list.
+#
+# run_core_robustness_analysis.py uses --root as BOTH its input and its output
+# directory, so pointing it at the live Circle_finder root would overwrite the
+# v1 robustness tables the submitted manuscript quotes. A separate v2 root is
+# assembled here: callsets are symlinked (never copied -- 2.1 GB per set), and
+# the three input tables plus the RCA metrics are copied in.
+#
+# On the RCA metrics: the script derives the `circlemap_current` arm from
+# metadata/RCA_sample_metrics.tsv. Under v2, `current` is the permissive
+# sensitivity arm -- the un-filtered archive -- so v1's RCA metrics are exactly
+# the right input for it. The methods arm takes its counts from
+# circlemap_output_callset_sample_metrics.tsv instead.
+#
+# Node is pinned: cu19 reports state=free but executes nothing.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/core_robustness.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/core_robustness.done"
+SCRIPTS_PATCHED=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+RROOT="$V2ROOT/robustness"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+
+mkdir -p "$RROOT"/{tables,metadata,figures}
+ln -sfn "$CF_ROOT/callsets" "$RROOT/callsets"
+
+# The three tables the analysis reads are call-set descriptions, identical for
+# v1 and v2; only the primary-arm labelling changes downstream.
+for t in circlemap_output_callset_sample_metrics.tsv \
+         artifact_masked_sample_metrics.tsv \
+         caller_concordance_all.tsv \
+         circlemap_threshold_grid_sample_metrics.tsv; do
+    cp -pf "$CF_ROOT/tables/$t" "$RROOT/tables/$t"
+    test -s "$RROOT/tables/$t"
+done
+cp -pf "$V1_RCA/results/RCA_sample_metrics.tsv" "$RROOT/metadata/RCA_sample_metrics.tsv"
+
+test -s "$RROOT/tables/circlemap_output_callset_sample_metrics.tsv"
+test -s "$RROOT/metadata/RCA_sample_metrics.tsv"
+test -d "$RROOT/callsets/circlemap_methods"
+echo "input_gate=PASS"
+
+"$PYTHON_BIN" -u "$SCRIPTS_PATCHED/run_core_robustness_analysis.py" \
+    --root "$RROOT" \
+    --manifest "$V1_CHROMATIN/inputs/eccdna_sample_manifest.tsv" \
+    --rca-metadata "$V1_RCA/results/RCA_sample_metrics.tsv"
+
+echo "end=$(date -u +%FT%TZ)"
+
+test -s "$RROOT/tables/validation_target_support_summary.tsv"
+test -s "$RROOT/tables/robustness_callset_sample_metrics.tsv"
+# Count distinct targets with python rather than awk: the field separator in an
+# awk one-liner does not survive the qsub/PBS quoting layers intact, and a
+# mangled -F silently splits on the wrong character and reports a plausible
+# but wrong count instead of failing.
+n_targets=$("$PYTHON_BIN" -c "
+import csv,sys
+with open(sys.argv[1], newline='') as fh:
+    print(len({r['target'] for r in csv.DictReader(fh, delimiter='\t')}))
+" "$RROOT/tables/validation_target_support_summary.tsv")
+echo "targets_in_summary=$n_targets"
+test "$n_targets" -eq 5
+grep -q "TCF7L1" "$RROOT/tables/validation_target_support_summary.tsv"
+{
+    echo "PASS"
+    echo "targets=$n_targets"
+    echo "root=$RROOT"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"

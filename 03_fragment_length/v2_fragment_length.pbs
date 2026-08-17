@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#PBS -N v2_len_peaks
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=24gb
+#PBS -l walltime=06:00:00
+#PBS -j oe
+#PBS -V
+#
+# S2 branch B1 -- fragment-length peak analysis on the methods call set.
+# Recomputes the equal-sample-weighted 50-1,000 bp density, the consensus peak
+# positions (196/365/571 bp in v1) and their bootstrap confidence intervals.
+#
+# The v1 seed and resampling counts are carried over unchanged so that any
+# movement in the peaks is attributable to the call set alone.
+
+set -euo pipefail
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2ROOT/logs/fragment_length.${STAMP}.log"
+MARKER="$V2ROOT/logs/fragment_length.done"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+
+v2_prepare_dirs
+rm -f "$MARKER"
+
+{
+    echo "host=$(hostname)"
+    echo "callset=circlemap_methods"
+    echo "seed=$SEED_FRAGLEN bootstrap=$BOOTSTRAP_FRAGLEN"
+    echo "start=$(date -u +%FT%TZ)"
+
+    test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+    test -s "$V1_EPM/input/sample_metadata.tsv"
+    echo "input_gate=PASS"
+
+    "$PYTHON_BIN" -u \
+        "/gpfs/data/gao/Covid-eccDNA/Revise/fragment-length/scripts/run_fragment_length_peak_analysis.py" \
+        --metadata "$V1_EPM/input/sample_metadata.tsv" \
+        --covid-bed-dir "$ADAPTER/covid" \
+        --hc-bed-dir "$ADAPTER/normal" \
+        --output-dir "$V2ROOT/fragment_length" \
+        --bootstrap-iterations "$BOOTSTRAP_FRAGLEN" \
+        --subsample-repeats "$SUBSAMPLE_REPEATS" \
+        --subsample-count "$SUBSAMPLE_COUNT" \
+        --seed "$SEED_FRAGLEN"
+
+    n=$(find "$V2ROOT/fragment_length" -name '*.tsv' | wc -l)
+    echo "tables_present=$n"
+    echo "end=$(date -u +%FT%TZ)"
+    { echo "PASS"; echo "tables=$n"; echo "completed_utc=$(date -u +%FT%TZ)"; } > "$MARKER"
+} > "$LOG" 2>&1

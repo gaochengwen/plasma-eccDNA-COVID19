@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#PBS -N CF_pilot_cons
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=32gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+LOG="$ROOT/logs/pilot_consensus.log"
+mkdir -p "$ROOT/logs"
+exec > >(tee "$LOG") 2>&1
+
+cd "$ROOT"
+/gpfs/home/gaochengwen/bin/python3 \
+    scripts/build_consensus_callsets.py \
+    --root "$ROOT" \
+    --manifest manifests/eccdna_sample_manifest.tsv \
+    --sample-filter config/pilot_samples.tsv \
+    --label pilot

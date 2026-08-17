@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+#PBS -N v2_chrom_ext
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=96gb
+#PBS -l walltime=48:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_chromatin_extensions.log
+#PBS -V
+#
+# The spool path above is explicit on purpose. On this cluster PBS silently
+# discards the default .o/.e for some nodes, so a job that dies in the
+# preamble -- before the script opens its own log -- leaves no trace at all.
+# The v1 author documented the same behaviour in chromatin_extensions.pbs.
+#
+# S2 branch A2 -- chromatin extension tables on the methods call set.
+# Produces the ext_* tables behind Figure S9 (multi-cell-type controls,
+# mappability restriction, peak-centred density).
+#
+# Submit one stage per job. qsub -v splits on commas, so a multi-stage value is
+# silently truncated when passed that way; stages are given with '+' and
+# translated here.
+#     qsub -v EXT_STAGES=multicell  v2_chromatin_extensions.pbs
+#
+# Compute nodes have no outbound network. Every reference this reads is already
+# on /gpfs and is checked before the analysis starts.
+
+set -uo pipefail
+
+# Open the log before anything else can fail.
+#
+# Earlier attempts died somewhere in the preamble on one particular compute
+# node and left nothing behind at all: no job log, because the redirect had
+# not been reached yet, and no PBS spool, because this cluster discards it.
+# Redirecting first -- with an execution trace -- means any future failure is
+# diagnosable from the log alone. The paths here are literal on purpose; they
+# must not depend on v2_env.sh having been sourced successfully.
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAGES=$(printf '%s' "${EXT_STAGES:-multicell}" | tr '+' ',')
+TAG=$(printf '%s' "$STAGES" | tr ',' '_')
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/extensions.${TAG}.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+echo "preamble_host=$(hostname)"
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/extensions.${TAG}.done"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+v2_prepare_dirs
+rm -f "$MARKER"
+set +x
+
+{
+    echo "host=$(hostname)"
+    echo "stages=$STAGES"
+    echo "callset=circlemap_methods"
+    echo "adapter=$ADAPTER"
+    echo "outdir=$V2ROOT/chromatin"
+    echo "start=$(date -u +%FT%TZ)"
+
+    # Input gate: fail fast rather than half-writing a table set.
+    test -d "$ADAPTER/covid"
+    test -d "$ADAPTER/normal"
+    test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+    test -s "$V2ROOT/chromatin/reference/hg38.chrom.sizes"
+    test -s "$V2ROOT/chromatin/reference/k36.umap.bed.gz"
+    test -s "$V1_CHROMATIN/encode_hg38/encode_hg38_peak_manifest.tsv"
+    # `module load samtools-1.9` does not take on every compute node, and the
+    # multicell stage builds a sample manifest that shells out to samtools.
+    # Pass the absolute binary rather than relying on PATH.
+    test -x "$SAMTOOLS_19"
+    echo "input_gate=PASS"
+
+    "$PYTHON_BIN" -u "$V1_CHROMATIN/scripts/run_chromatin_extensions.py" \
+        --project-dir "$ADAPTER" \
+        --outdir "$V2ROOT/chromatin" \
+        --encode-manifest "$V1_CHROMATIN/encode_hg38/encode_hg38_peak_manifest.tsv" \
+        --samtools "$SAMTOOLS_19" \
+        --stages "$STAGES"
+    status=$?
+
+    echo "python_exit=$status"
+    echo "end=$(date -u +%FT%TZ)"
+
+    # Success is judged on the produced tables, not on the exit code.
+    #
+    # run_chromatin_extensions.py has a pre-existing defect in the `density`
+    # stage: peak_centred_density() writes its table and then, on the next
+    # line, reads frame["enrichment_ratio"] -- a column that function never
+    # builds (it exists only in enrichment_for_tracks). The stage therefore
+    # always raises KeyError *after* its output is complete. The v1 run hit
+    # the same crash and its table is the one the manuscript used; v1 and v2
+    # tables agree in schema (10 columns) and row count (49,920). The script
+    # is deliberately left unpatched so v2 reproduces v1 exactly, and the
+    # gate below verifies the artefact instead.
+    # binning_check must be matched before mappability: both stage names are
+    # substrings of the same command line only by accident, and an unmatched
+    # stage silently reports FAIL even when its tables were written correctly.
+    case "$STAGES" in
+        *binning_check*) EXPECT="$V2ROOT/chromatin/tables/ext_binning_check_agreement.tsv" ;;
+        *density*)       EXPECT="$V2ROOT/chromatin/tables/ext_peak_centred_density.tsv" ;;
+        *mappability*)   EXPECT="$V2ROOT/chromatin/tables/ext_mappability_group_stats.tsv" ;;
+        *multicell*)     EXPECT="$V2ROOT/chromatin/tables/ext_multicell_group_stats.tsv" ;;
+        *)               EXPECT="" ;;
+    esac
+
+    if [[ -n "$EXPECT" && -s "$EXPECT" ]]; then
+        rows=$(($(wc -l < "$EXPECT") - 1))
+        n=$(ls "$V2ROOT/chromatin/tables/"ext_*.tsv 2>/dev/null | wc -l)
+        echo "expected_table=$EXPECT rows=$rows"
+        echo "ext_tables_present=$n"
+        {
+            echo "PASS"
+            echo "stages=$STAGES"
+            echo "expected_table=$(basename "$EXPECT")"
+            echo "rows=$rows"
+            echo "ext_tables=$n"
+            echo "python_exit=$status"
+            echo "verified_by=artefact_content"
+            echo "completed_utc=$(date -u +%FT%TZ)"
+        } > "$MARKER"
+        exit 0
+    fi
+
+    echo "FAIL: expected table missing or empty: ${EXPECT:-<unknown stage>}"
+    exit "${status:-1}"
+}

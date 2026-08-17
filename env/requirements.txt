@@ -1,0 +1,22 @@
+# Python packages for the local (workstation) environment.
+#
+# The compute-heavy analyses ran on the HPC environment instead; see
+# env/software_versions.tsv for both environments' exact versions.
+#
+# Versions below are the ones actually used locally. NumPy is pinned to the 2.0
+# series because Matplotlib 3.9.x and the figure generators were validated
+# against it; the HPC environment used NumPy 2.2.6 with Python 3.10.
+
+numpy==2.0.2
+scipy==1.13.1
+matplotlib==3.9.4
+pandas==2.3.3
+statsmodels==0.14.6
+openpyxl==3.1.5
+
+# Manuscript/workbook auditing helpers used by 11_verification
+python-docx==1.1.2
+lxml>=4.9
+
+# PDF fidelity gates in 10_figures/regen_figure_v2.py and regen_create_script.py
+pymupdf>=1.24

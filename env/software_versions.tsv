@@ -1,0 +1,30 @@
+environment	component	version	path_or_note
+hpc	Python	3.10.13	CPython; /public/opt/miniforge3_2024/bin/python
+hpc	NumPy	2.2.6	Python package
+hpc	SciPy	1.13.1	Python package
+hpc	Matplotlib	3.9.0	Python package
+hpc	platform	Linux-3.10.0-862.el7.x86_64-x86_64-with-glibc2.17	PBS compute nodes
+hpc	figure font	Liberation Sans	matplotlib font used by the HPC generators
+local	Python	3.9.25	CPython; figure regeneration, auditing, verification
+local	NumPy	2.0.2	Python package
+local	SciPy	1.13.1	Python package
+local	Matplotlib	3.9.4	Python package
+local	pandas	2.3.3	Python package
+local	statsmodels	0.14.6	Python package
+local	openpyxl	3.1.5	Python package
+external	FastQC	0.11.3	https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+external	fastp	0.23.x	https://github.com/OpenGene/fastp
+external	BWA	0.7.17-r1188	/opt/bwa-0.7.17/bwa
+external	samtools	1.9	/opt/samtools-1.9/samtools; used for idxstats denominators
+external	samtools	1.17	/public/opt/samtools-1.17/bin/samtools; used by the Circle_finder runs
+external	bedtools	2.28.0	/opt/bedtools2-2.28.0/bin/bedtools
+external	samblaster	0.1.20	/gpfs/softwares/STRetch/tools/bwa.kit/samblaster
+external	Circle-Map	Realign	https://github.com/iprada/Circle-Map
+external	Circle_finder	commit 3eb333db2ea6277dde36cbf640be9afeb710c717	https://github.com/pk7zuva/Circle_finder
+external	Circle_finder pipeline sha256	92ccf0742076529656366c680a79618de45e650675297dc99c2e98d8b8ea6339	circle_finder-pipeline-bwa-mem-samblaster.sh
+external	liftOver	UCSC	https://hgdownload.soe.ucsc.edu/admin/exe/
+external	R	4.1.0	https://www.r-project.org/
+external	GraphPad Prism	10.4.1	commercial; descriptive plots only
+external	Adobe Illustrator	29.0	manual assembly of Figures 1, 2 and 3
+external	g:Profiler	web service	over-representation confirmation; request and response archived with the analysis
+external	Metascape	web service	Figure 3c term-level export not scriptable

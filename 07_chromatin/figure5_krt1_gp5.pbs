@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#PBS -N fig5_KRT1_GP5
+#PBS -q batch
+#PBS -l nodes=1:ppn=2
+#PBS -l mem=32gb
+#PBS -l walltime=08:00:00
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/figure5_krt1_gp5.o
+#PBS -e /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/figure5_krt1_gp5.e
+
+set -euo pipefail
+
+PROJECT_DIR=/gpfs/data/gao/Covid-eccDNA
+OUTDIR=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+PYTHON_BIN=/public/opt/miniforge3_2024/bin/python
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+cd "$OUTDIR"
+"$PYTHON_BIN" -u scripts/make_locus_panels.py \
+  --project-dir "$PROJECT_DIR" \
+  --outdir "$OUTDIR" \
+  --samtools samtools \
+  --refgene "$PROJECT_DIR/eccDNA_abundance3/refGene.txt" \
+  --stem figure5_de_loci_hg38

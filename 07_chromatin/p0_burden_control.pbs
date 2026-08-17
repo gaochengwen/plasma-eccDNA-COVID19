@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#PBS -N p0_burden_control
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=96gb
+#PBS -l walltime=24:00:00
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/p0_burden_control.o
+#PBS -e /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/p0_burden_control.e
+
+set -euo pipefail
+
+PROJECT_DIR=/gpfs/data/gao/Covid-eccDNA
+OUTDIR=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+PYTHON_BIN=/public/opt/miniforge3_2024/bin/python
+COVARIATES=/gpfs/data/gao/Covid-eccDNA/Revise/RCA/input/rca_metadata.tsv
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+cd "$OUTDIR"
+
+# The three table-only stages are rerun here so the job is self-contained and the
+# whole P0 set carries one consistent timestamp.
+"$PYTHON_BIN" scripts/run_p0_burden_control.py \
+  --project-dir "$PROJECT_DIR" \
+  --outdir "$OUTDIR" \
+  --covariates "$COVARIATES" \
+  --samtools samtools \
+  --targets 4000,20000 \
+  --repeats 100 \
+  --stages within,matched,covariate,downsample,figure

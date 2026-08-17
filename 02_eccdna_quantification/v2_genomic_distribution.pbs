@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#PBS -N v2_genomic_dist
+#PBS -q batch
+#PBS -l nodes=cu16:ppn=4
+#PBS -l mem=48gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_genomic_dist.log
+#PBS -V
+#
+# REIMPLEMENTATION (pre-declaration amendments A3/A4) -- per-sample chromosome
+# distribution (Figure 2b) and gene-element O/E (Figure 2d), computed to the
+# manuscript Methods rather than to the original scripts, which differ on two
+# points recorded in A4: start coordinate vs full interval, and genome-occupied
+# fraction vs pooled cohort background.
+#
+# Figure 2c (repeat classes) is deliberately not here: its original script works
+# from BAM reads, which are identical in v1 and v2, so that analysis is
+# untouched by the call-set migration.
+#
+# Node is pinned: cu19 reports state=free but executes nothing.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/genomic_distribution.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/genomic_distribution.done"
+SCRIPTS_PATCHED=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+ANNOT=/gpfs/data/gao/Covid-eccDNA/annotation
+OUTDIR="$V2ROOT/genomic_distribution"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+mkdir -p "$OUTDIR"
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+for e in exon intron 5UTR 3UTR CpG_islands Gene2KbU Gene2KbD; do
+    test -s "$ANNOT/${e}_merged.bed"
+done
+test -s "$ANNOT/hg38.chrom.sizes"
+echo "input_gate=PASS"
+
+"$PYTHON_BIN" -u "$SCRIPTS_PATCHED/genomic_distribution.py" \
+    "$ADAPTER" "$ANNOT" "$OUTDIR"
+
+echo "end=$(date -u +%FT%TZ)"
+nc=$(($(wc -l < "$OUTDIR/chromosome_distribution.tsv") - 1))
+ne=$(($(wc -l < "$OUTDIR/gene_feature_enrichment_scores.tsv") - 1))
+echo "chromosome_rows=$nc element_rows=$ne"
+test "$nc" -eq 1872   # 78 samples x 24 canonical chromosomes
+test "$ne" -eq 546    # 78 samples x 7 elements
+{
+    echo "PASS"
+    echo "chromosome_rows=$nc"
+    echo "element_rows=$ne"
+    echo "note=REIMPLEMENTED to Methods per amendments A3/A4; element O/E not value-comparable with v1"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"

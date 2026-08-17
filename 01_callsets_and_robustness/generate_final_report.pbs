@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#PBS -N CF_final_report
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=16gb
+#PBS -l walltime=08:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+bash "$ROOT/scripts/collect_software_versions.sh"
+/public/opt/miniforge3_2024/bin/python \
+  "$ROOT/scripts/generate_final_report.py" \
+  --root "$ROOT" \
+  >> "$ROOT/logs/generate_final_report.log" 2>&1

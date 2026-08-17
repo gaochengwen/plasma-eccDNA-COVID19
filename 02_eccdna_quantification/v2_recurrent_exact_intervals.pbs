@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#PBS -N v2_recur_int
+#PBS -q batch
+#PBS -l nodes=cu16:ppn=4
+#PBS -l mem=64gb
+#PBS -l walltime=08:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_recurrent_intervals.log
+#PBS -V
+#
+# REIMPLEMENTATION (pre-declaration amendment A3) -- recurrent COVID-specific
+# exact eccDNA intervals, the input behind Figure 3d.
+#
+# The original code is not in the repository. The definition is taken verbatim
+# from the Figure 3d legend:
+#
+#   "exact eccDNA intervals detected in at least 10 of 39 COVID-19 samples and
+#    in no HC sample, ordered by decreasing recurrence and then by genomic
+#    coordinate; only COVID-19 samples are shown, because no interval was
+#    detected in a control."
+#
+# "Exact" means an identical (chrom, start, end) triple in the BED, matching the
+# convention used by the validation-target audits elsewhere in this project.
+# Output shape follows the v1 artefact: rows `chr:start_end`, columns the 39
+# COVID-19 sample ids, values 0/1. A min-6 matrix is emitted alongside the
+# min-10 one, as in v1.
+#
+# This is a re-implementation, not a reproduction: there is no v1 code to gate
+# against. Results must be labelled accordingly.
+#
+# Node is pinned: cu19 reports state=free but executes nothing.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/recurrent_intervals.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/recurrent_intervals.done"
+SCRIPTS_PATCHED=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+OUTDIR="$V2ROOT/recurrent_intervals"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+mkdir -p "$OUTDIR"
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+echo "input_gate=PASS"
+
+"$PYTHON_BIN" -u "$SCRIPTS_PATCHED/recurrent_exact_intervals.py" "$ADAPTER" "$OUTDIR"
+
+echo "end=$(date -u +%FT%TZ)"
+test -s "$OUTDIR/covid_specific_exact.matrix.min10.tsv"
+n10=$(($(wc -l < "$OUTDIR/covid_specific_exact.matrix.min10.tsv") - 1))
+n6=$(($(wc -l < "$OUTDIR/covid_specific_exact.matrix.min6.tsv") - 1))
+echo "min10_rows=$n10 min6_rows=$n6"
+{
+    echo "PASS"
+    echo "min10_intervals=$n10"
+    echo "min6_intervals=$n6"
+    echo "note=REIMPLEMENTED per pre-declaration amendment A3; no v1 code to gate against"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#PBS -N v2_summ_ds
+#PBS -q batch
+#PBS -l nodes=cu16:ppn=1
+#PBS -l mem=24gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_summarize_downstream.log
+#PBS -V
+#
+# S3 addendum -- cross-call-set downstream concordance tables.
+#
+# Produces eccgene_callset_concordance.tsv, chromatin_callset_concordance.tsv,
+# eccgene_candidate_stability.tsv and friends, which Figure S7 reads.
+#
+# Run from the patched copy so the candidate-stability table covers all five
+# audited targets including TCF7L1circle.
+#
+# Node is pinned: cu19 reports state=free but executes nothing.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/summarize_downstream.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/summarize_downstream.done"
+SCRIPTS_PATCHED=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+RROOT="$V2ROOT/robustness"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+
+# The summariser walks <root>/downstream/<callset>/; those trees are shared
+# with v1 and are linked rather than copied.
+ln -sfn "$CF_ROOT/downstream" "$RROOT/downstream"
+test -d "$RROOT/downstream/circlemap_methods/eccGene"
+test -d "$RROOT/downstream/consensus_t10/eccGene"
+echo "input_gate=PASS"
+
+"$PYTHON_BIN" -u "$SCRIPTS_PATCHED/summarize_downstream_robustness.py" --root "$RROOT"
+
+echo "end=$(date -u +%FT%TZ)"
+test -s "$RROOT/tables/eccgene_callset_concordance.tsv"
+test -s "$RROOT/tables/chromatin_callset_concordance.tsv"
+grep -q TCF7L1 "$RROOT/tables/eccgene_candidate_stability.tsv"
+{
+    echo "PASS"
+    echo "tables=$(ls "$RROOT/tables"/*.tsv | wc -l)"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"

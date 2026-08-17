@@ -1,0 +1,41 @@
+#!/bin/bash
+#PBS -N BCL3_rank_only
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=16gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/BCL3
+PRIMARY=/gpfs/data/gao/Covid-eccDNA/Revise/eccGene
+ROBUST=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+CHROMATIN=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+QUALITY="$ROOT/quality_filtered_eccGene"
+
+cd "$ROOT"
+
+/gpfs/home/gaochengwen/bin/python3 "$ROOT/scripts/rank_candidate_loci.py" \
+    --primary-eccgene-dir "$PRIMARY" \
+    --quality-eccgene-dir "$QUALITY" \
+    --sample-metadata "$PRIMARY/sample_metadata.tsv" \
+    --artifact-callset-dir "$ROBUST/callsets/circlemap_artifact_masked" \
+    --go-obo "$ROOT/input/go-basic.obo" \
+    --goa-gaf "$ROOT/input/goa_human.gaf.gz" \
+    --enrichment-terms "$ROOT/input/eccGene_gProfiler_all_significant_terms.tsv" \
+    --cd14-h3k27ac "$CHROMATIN/peaks_hg38/CD14_H3K27ac.liftover.hg38.canonical.filtered.merged.bed" \
+    --cd14-h3k27me3 "$CHROMATIN/peaks_hg38/CD14_H3K27me3.liftover.hg38.canonical.filtered.merged.bed" \
+    --huvec-h3k27ac "$CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27ac.ENCFF426QFH.bed" \
+    --huvec-h3k27me3 "$CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27me3.ENCFF938HVH.bed" \
+    --output-dir "$ROOT"
+
+sha256sum \
+    "$ROOT/scripts/prepare_artifact_links.py" \
+    "$ROOT/scripts/rank_candidate_loci.py" \
+    "$ROOT/run_candidate_locus_ranking.pbs" \
+    "$ROOT/run_ranking_only.pbs" \
+    > "$ROOT/code_checksums.sha256"
+
+echo "BCL3/PROCR ranking-only rerun complete."

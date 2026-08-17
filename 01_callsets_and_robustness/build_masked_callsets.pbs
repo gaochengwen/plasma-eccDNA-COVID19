@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#PBS -N CF_mask_calls
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=24gb
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+REF="$ROOT/reference"
+CHROMATIN_REF=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin/reference
+PYTHON=/public/opt/miniforge3_2024/bin/python
+mkdir -p "$ROOT/logs"
+
+"$PYTHON" "$ROOT/scripts/build_masked_callsets.py" \
+  --root "$ROOT" \
+  --manifest /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/inputs/eccdna_sample_manifest.tsv \
+  --forbidden-bed "$CHROMATIN_REF/hg38_forbidden.blacklist_gaps.canonical.merged.bed" \
+  --umap-bed "$REF/normalized/umap_k100.canonical.merged.bed" \
+  --segdup-bed "$REF/normalized/segmental_duplication.canonical.merged.bed" \
+  --repeat-bed "$REF/normalized/repeatmasker.canonical.merged.bed" \
+  >> "$ROOT/logs/build_masked_callsets.log" 2>&1

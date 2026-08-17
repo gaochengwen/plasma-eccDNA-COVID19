@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#PBS -N fig5_locus_screen
+#PBS -q batch
+#PBS -l nodes=1:ppn=2
+#PBS -l mem=32gb
+#PBS -l walltime=08:00:00
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/locus_candidate_screen.o
+#PBS -e /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/locus_candidate_screen.e
+
+# Render objective candidate pairs in an identical browser-track layout.  This is
+# a screen for chromatin-display feasibility; it does not alter the statistical
+# ranking or the candidate-locus table.
+set -euo pipefail
+
+PROJECT_DIR=/gpfs/data/gao/Covid-eccDNA
+OUTDIR=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+PYTHON_BIN=/public/opt/miniforge3_2024/bin/python
+
+case "${CASE:-}" in
+  hlae_proz)
+    LOCI='HLA-E:d,PROZ:e'
+    STEM='figure5_screen_hlae_proz'
+    TRACKS='A549_GSE179184_H3K27ac_official,A549_GSE179184_H3K4me3_official,CD14_H3K27ac,CD14_H3K27me3'
+    ;;
+  lpo_proz)
+    LOCI='LPO:d,PROZ:e'
+    STEM='figure5_screen_lpo_proz'
+    TRACKS='A549_GSE179184_H3K27ac_official,A549_GSE179184_H3K4me3_official,CD14_H3K27ac,CD14_H3K27me3'
+    ;;
+  fcmr_mcam)
+    LOCI='FCMR:d,MCAM:e'
+    STEM='figure5_screen_fcmr_mcam'
+    TRACKS='A549_GSE179184_H3K27ac_official,A549_GSE179184_H3K4me3_official,CD14_H3K27ac,CD14_H3K27me3'
+    ;;
+  hlae_mcam)
+    # Highest-ranked strict-eligible candidate in each stratum with H3K27ac
+    # overlap in both reference contexts used by Fig. 5 (A549 and CD14+).
+    LOCI='HLA-E:d,MCAM:e'
+    STEM='figure5_screen_hlae_mcam'
+    TRACKS='A549_GSE179184_H3K27ac_official,CD14_H3K27ac'
+    ;;
+  *)
+    echo "Set CASE to one of: hlae_proz, lpo_proz, fcmr_mcam, hlae_mcam" >&2
+    exit 2
+    ;;
+esac
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+cd "$OUTDIR"
+"$PYTHON_BIN" -u scripts/make_locus_panels.py \
+  --project-dir "$PROJECT_DIR" \
+  --outdir "$OUTDIR" \
+  --samtools samtools \
+  --refgene "$PROJECT_DIR/eccDNA_abundance3/refGene.txt" \
+  --stem "$STEM" \
+  --loci "$LOCI" \
+  --peak-tracks "$TRACKS"

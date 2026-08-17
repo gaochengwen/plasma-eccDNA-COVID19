@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#PBS -N v2_p0_burden
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=96gb
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -V
+#
+# S2 branch A3 -- P0 burden controls on the methods call set.
+# Produces the p0_* tables: within-group enrichment, age-matched subset,
+# HC3 covariate adjustment, depth downsampling, and the downsample-vs-full
+# agreement check.
+#
+# All six stages run in one job so the whole P0 set carries a single
+# consistent timestamp, matching the v1 convention.
+
+set -euo pipefail
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2ROOT/logs/p0_burden_control.${STAMP}.log"
+MARKER="$V2ROOT/logs/p0_burden_control.done"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+v2_prepare_dirs
+rm -f "$MARKER"
+
+{
+    echo "host=$(hostname)"
+    echo "callset=circlemap_methods"
+    echo "adapter=$ADAPTER"
+    echo "outdir=$V2ROOT/chromatin"
+    echo "targets=$P0_TARGETS repeats=$P0_REPEATS"
+    echo "start=$(date -u +%FT%TZ)"
+
+    test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+    test -s "$V1_RCA/input/rca_metadata.tsv"
+    test -s "$V2ROOT/chromatin/tables/sample_relative_enrichment.tsv"
+    echo "input_gate=PASS"
+
+    "$PYTHON_BIN" -u "$V1_CHROMATIN/scripts/run_p0_burden_control.py" \
+        --project-dir "$ADAPTER" \
+        --outdir "$V2ROOT/chromatin" \
+        --covariates "$V1_RCA/input/rca_metadata.tsv" \
+        --samtools "$SAMTOOLS_19" \
+        --targets "$P0_TARGETS" \
+        --repeats "$P0_REPEATS" \
+        --stages "${P0_STAGES:-within,matched,covariate,downsample,burden,figure}"
+
+    n=$(ls "$V2ROOT/chromatin/tables/"p0_*.tsv 2>/dev/null | wc -l)
+    echo "p0_tables_present=$n"
+    echo "end=$(date -u +%FT%TZ)"
+    {
+        echo "PASS"
+        echo "p0_tables=$n"; test "$n" -eq 8
+        echo "completed_utc=$(date -u +%FT%TZ)"
+    } > "$MARKER"
+} > "$LOG" 2>&1

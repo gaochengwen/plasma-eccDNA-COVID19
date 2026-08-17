@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#PBS -N v2_rca_bias
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=16gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -V
+#
+# S2 branch B2 -- RCA bias analysis on the methods call set.
+# Produces the Figure S3 inputs: RCA concentration vs detected eccDNA count,
+# Circle-Map support events and EPM, plus the HC3 covariate models and the
+# group-by-RCA interaction contrasts.
+#
+# BAM directories are unchanged between v1 and v2 -- only the BED call set
+# differs, so mapped-read denominators stay identical.
+
+set -euo pipefail
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2ROOT/logs/rca_bias.${STAMP}.log"
+MARKER="$V2ROOT/logs/rca_bias.done"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+v2_prepare_dirs
+rm -f "$MARKER"
+
+{
+    echo "host=$(hostname)"
+    echo "callset=circlemap_methods"
+    echo "bootstrap=$BOOTSTRAP_RCA"
+    echo "start=$(date -u +%FT%TZ)"
+
+    test "$(find "$ADAPTER/covid" "$ADAPTER/normal" -type l | wc -l)" -eq 78
+    test "$(find "$ADAPTER/covid_bam" "$ADAPTER/normal_bam" -type l | wc -l)" -ge 78
+    test -s "$V1_RCA/input/rca_metadata.tsv"
+    test -x "$SAMTOOLS_19"
+    echo "input_gate=PASS"
+
+    "$PYTHON_BIN" -u "$V1_RCA/scripts/run_rca_bias_analysis.py" \
+        --metadata "$V1_RCA/input/rca_metadata.tsv" \
+        --covid-bed-dir "$ADAPTER/covid" \
+        --hc-bed-dir "$ADAPTER/normal" \
+        --covid-bam-dir "$ADAPTER/covid_bam" \
+        --hc-bam-dir "$ADAPTER/normal_bam" \
+        --output-dir "$V2ROOT/RCA" \
+        --samtools "$SAMTOOLS_19" \
+        --bootstrap-iterations "$BOOTSTRAP_RCA"
+
+    n=$(find "$V2ROOT/RCA" -name '*.tsv' | wc -l)
+    echo "tables_present=$n"
+    echo "end=$(date -u +%FT%TZ)"
+    { echo "PASS"; echo "tables=$n"; echo "completed_utc=$(date -u +%FT%TZ)"; } > "$MARKER"
+} > "$LOG" 2>&1

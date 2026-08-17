@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#PBS -N chromatin_ext
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=96gb
+#PBS -l walltime=48:00:00
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/chromatin_extensions.pbs.o
+#PBS -e /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/chromatin_extensions.pbs.e
+
+set -uo pipefail
+
+PROJECT_DIR=/gpfs/data/gao/Covid-eccDNA
+OUTDIR=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+PYTHON_BIN=/public/opt/miniforge3_2024/bin/python
+# qsub -v parses commas as variable separators, so a multi-stage value passed that
+# way is silently truncated. Stages are given with '+' and translated here; submit
+# one stage per job.
+STAGES=$(printf '%s' "${EXT_STAGES:-multicell}" | tr '+' ',')
+STAMP=$(date +%Y%m%d_%H%M%S)
+# PBS did not retain the spooled .o/.e for an earlier run of this job, so the log
+# is written directly into the output directory where it cannot be lost.
+LOG="$OUTDIR/logs/extensions.$(printf '%s' "$STAGES" | tr ',' '_').${STAMP}.log"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+module load samtools-1.9 >/dev/null 2>&1 || true
+
+cd "$OUTDIR"
+
+{
+  echo "host=$(hostname) stages=$STAGES start=$(date)"
+  "$PYTHON_BIN" -u scripts/run_chromatin_extensions.py \
+    --project-dir "$PROJECT_DIR" \
+    --outdir "$OUTDIR" \
+    --samtools samtools \
+    --stages "$STAGES"
+  status=$?
+  echo "python exit=$status end=$(date)"
+  exit $status
+} > "$LOG" 2>&1

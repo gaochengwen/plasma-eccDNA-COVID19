@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#PBS -N fig5_HLAE_MCAM
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=8gb
+#PBS -l walltime=01:00:00
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/figure5_hlae_mcam.o
+#PBS -e /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/logs/figure5_hlae_mcam.e
+
+# Render the manuscript-facing Figure 5 from the completed QDUH coverage and
+# display-ranking outputs.  Panels a--c are loaded verbatim from the approved
+# mei Figure_5 export; only d/e are replaced.  This job changes presentation
+# only; it does not rerun the eccGene statistics or alter the selection table.
+set -euo pipefail
+
+PROJECT_DIR=/gpfs/data/gao/Covid-eccDNA
+OUTDIR=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+RANKING=/gpfs/data/gao/Covid-eccDNA/Revise/BCL3/tables/chromatin_display_candidate_ranking.tsv
+LOCKED_ABC=$OUTDIR/inputs/Figure_5_abc_locked_mei_600dpi.png
+PYTHON_BIN=/public/opt/miniforge3_2024/bin/python
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+
+cd "$OUTDIR"
+"$PYTHON_BIN" -u scripts/make_figure5_locked_abc_reference_de.py \
+  --outdir "$OUTDIR" \
+  --refgene "$PROJECT_DIR/eccDNA_abundance3/refGene.txt" \
+  --coverage "$OUTDIR/tables/figure5_screen_hlae_mcam_coverage.tsv" \
+  --display-ranking "$RANKING" \
+  --locked-png "$LOCKED_ABC" \
+  --stem figure5_hg38

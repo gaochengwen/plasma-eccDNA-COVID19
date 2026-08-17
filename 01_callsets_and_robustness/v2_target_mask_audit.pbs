@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#PBS -N v2_target_masks
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=8gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_target_masks.log
+#PBS -V
+#
+# Breakpoint artifact-mask audit for the validation targets, using the patched
+# target list that includes TCF7L1circle.
+#
+# Five targets are audited computationally; three go forward to the wet lab.
+#
+#   CTNNA2circle  chr2:79,885,063-79,885,444   experimental
+#   SDK1-circle   chr7:3,619,742-3,620,122     experimental
+#   TCF7L1-circle chr2:85,213,855-85,214,235   experimental
+#   CAB39circle   chr2:230,727,472-230,727,831 audit only
+#   chr22 target  chr22:42,359,179-42,359,558  audit only
+#
+# CAB39 and the chr22 interval are retained in the audit on purpose. Reviewer 1
+# Major Comment 7 names CAB39circle explicitly, so the manuscript has to show
+# why it was not carried into experimental validation -- both breakpoint
+# windows overlap annotated repeats. Deleting them from the audit would destroy
+# the evidence for that decision.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/target_mask_audit.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/target_mask_audit.done"
+SCRIPTS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+REF=$CF_ROOT/reference
+OUT=$V2ROOT/tables/validation_target_mask_audit.tsv
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+mkdir -p "$V2ROOT/tables"
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+
+test -s "$V1_CHROMATIN/reference/hg38_forbidden.blacklist_gaps.canonical.merged.bed"
+test -s "$REF/normalized/umap_k100.canonical.merged.bed"
+test -s "$REF/normalized/segmental_duplication.canonical.merged.bed"
+test -s "$REF/normalized/repeatmasker.canonical.merged.bed"
+test -s "$REF/raw/rmsk.txt.gz"
+echo "input_gate=PASS"
+
+"$PYTHON_BIN" -u "$SCRIPTS/audit_validation_target_masks.py" \
+    --forbidden-bed "$V1_CHROMATIN/reference/hg38_forbidden.blacklist_gaps.canonical.merged.bed" \
+    --umap-bed "$REF/normalized/umap_k100.canonical.merged.bed" \
+    --segdup-bed "$REF/normalized/segmental_duplication.canonical.merged.bed" \
+    --repeat-bed "$REF/normalized/repeatmasker.canonical.merged.bed" \
+    --repeatmasker-raw "$REF/raw/rmsk.txt.gz" \
+    --output "$OUT"
+
+echo "end=$(date -u +%FT%TZ)"
+
+# Ten rows expected: five targets x two breakpoint sides.
+rows=$(($(wc -l < "$OUT") - 1))
+echo "rows=$rows"
+test "$rows" -eq 10
+grep -q "^TCF7L1" "$OUT"
+{
+    echo "PASS"
+    echo "targets=CTNNA2,CAB39,chr22_target,SDK1,TCF7L1"
+    echo "rows=$rows"
+    echo "output=$OUT"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#PBS -N CF_masks
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=24gb
+#PBS -l walltime=08:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+PYTHON=/public/opt/miniforge3_2024/bin/python
+mkdir -p "$ROOT/logs" "$ROOT/reference"
+
+"$PYTHON" "$ROOT/scripts/prepare_strict_resources.py" \
+  --output-dir "$ROOT/reference" \
+  >> "$ROOT/logs/prepare_strict_resources.log" 2>&1

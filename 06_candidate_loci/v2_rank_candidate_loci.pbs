@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#PBS -N v2_rank_loci
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=16gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -V
+#
+# S2 branch C3 -- objective locus-selection ranking on the methods call set.
+# Feeds the Figure 5 display loci and the BCL3/PROCR eligibility audit.
+#
+# v1 paired primary = un-filtered archive with quality = artifact-masked.
+# v2 pairs primary = methods with quality = artifact-masked. Because the
+# artifact-masked set is itself derived from methods, the v2 pairing is nested
+# and internally consistent, which the v1 pairing was not.
+#
+# Depends on the artifact-masked downstream job (branch C2) having produced
+# $V2_ARTIFACT/eccGene.
+
+set -euo pipefail
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2ROOT/logs/rank_candidate_loci.${STAMP}.log"
+MARKER="$V2ROOT/logs/rank_candidate_loci.done"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+
+v2_prepare_dirs
+rm -f "$MARKER"
+
+{
+    echo "host=$(hostname)"
+    echo "primary_eccgene=$V2ROOT/eccGene"
+    echo "quality_eccgene=$V2_ARTIFACT/eccGene"
+    echo "start=$(date -u +%FT%TZ)"
+
+    test -s "$V2ROOT/eccGene/results/junction_abundance_wilcoxon.tsv"
+    test -s "$V2_ARTIFACT/eccGene/results/junction_abundance_wilcoxon.tsv"
+    test -s "$V2ROOT/eccGene/sample_metadata.tsv"
+    test -d "$CF_ROOT/callsets/circlemap_artifact_masked"
+    echo "input_gate=PASS"
+
+    "$PYTHON_BIN" -u "$V1_BCL3/scripts/rank_candidate_loci.py" \
+        --primary-eccgene-dir "$V2ROOT/eccGene" \
+        --quality-eccgene-dir "$V2_ARTIFACT/eccGene" \
+        --sample-metadata "$V2ROOT/eccGene/sample_metadata.tsv" \
+        --artifact-callset-dir "$CF_ROOT/callsets/circlemap_artifact_masked" \
+        --go-obo "$V1_BCL3/input/go-basic.obo" \
+        --goa-gaf "$V1_BCL3/input/goa_human.gaf.gz" \
+        --enrichment-terms "$V2ROOT/BCL3/eccGene_gProfiler_all_significant_terms_v2.tsv" \
+        --cd14-h3k27ac "$V1_CHROMATIN/peaks_hg38/CD14_H3K27ac.liftover.hg38.canonical.filtered.merged.bed" \
+        --cd14-h3k27me3 "$V1_CHROMATIN/peaks_hg38/CD14_H3K27me3.liftover.hg38.canonical.filtered.merged.bed" \
+        --huvec-h3k27ac "$V1_CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27ac.ENCFF426QFH.bed" \
+        --huvec-h3k27me3 "$V1_CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27me3.ENCFF938HVH.bed" \
+        --output-dir "$V2ROOT/BCL3"
+
+    echo "end=$(date -u +%FT%TZ)"
+    test -s "$V2ROOT/BCL3/tables/selected_loci.tsv"
+    { echo "PASS"; echo "completed_utc=$(date -u +%FT%TZ)"; } > "$MARKER"
+
+    # Gate 1 input: the manuscript decision hinges on whether the display loci
+    # moved, so surface that comparison directly in the log.
+    echo "--- v1 vs v2 selected loci ---"
+    cut -f1,2 "$V1_BCL3/tables/selected_loci.tsv" | head -5
+    echo "---"
+    cut -f1,2 "$V2ROOT/BCL3/tables/selected_loci.tsv" | head -5
+} > "$LOG" 2>&1

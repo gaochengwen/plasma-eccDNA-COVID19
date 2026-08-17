@@ -1,0 +1,105 @@
+cff-version: 1.2.0
+title: >-
+  Analysis code for "Plasma eccDNA profiles in COVID-19: increased abundance and
+  associations with genomic and reference-chromatin features"
+message: >-
+  If you use this code, please cite the associated manuscript.
+type: software
+license: MIT
+authors:
+  - given-names: Chengwen
+    family-names: Gao
+    affiliation: >-
+      The Affiliated Hospital of Qingdao University & Institute of Genetics and
+      Integrative Biology (Qingdao Branch of SJTU Bio-X Institutes), Qingdao
+      University, Qingdao, China
+  - given-names: Zhe
+    family-names: Xu
+    affiliation: >-
+      Department of Urology, The Affiliated Hospital of Qingdao University,
+      Qingdao, China
+  - given-names: Xi
+    family-names: Peng
+    affiliation: >-
+      College of Life Sciences, University of Chinese Academy of Science,
+      Beijing, China
+  - given-names: Chuanhong
+    family-names: Wu
+  - given-names: Xiangzhong
+    family-names: Zhao
+  - given-names: Qian
+    family-names: Zhang
+  - given-names: Mingxuan
+    family-names: Wu
+  - given-names: Baokun
+    family-names: Wang
+  - given-names: Baiqiang
+    family-names: Xue
+  - given-names: Wenli
+    family-names: Yuan
+  - given-names: Haiyan
+    family-names: Song
+  - given-names: Xiangyu
+    family-names: Li
+  - given-names: Peng
+    family-names: Han
+    affiliation: >-
+      Scientific Research Center, The Seventh Affiliated Hospital of Sun Yat-sen
+      University, Shenzhen, China
+  - given-names: Haitao
+    family-names: Niu
+    affiliation: >-
+      Department of Urology, The Affiliated Hospital of Qingdao University,
+      Qingdao, China
+  - given-names: Zhiqiang
+    family-names: Li
+    affiliation: >-
+      The Affiliated Hospital of Qingdao University & Institute of Genetics and
+      Integrative Biology, Qingdao University, Qingdao, China
+keywords:
+  - eccDNA
+  - extrachromosomal circular DNA
+  - COVID-19
+  - cell-free DNA
+  - Circle-seq
+  - Circle-Map
+  - chromatin
+preferred-citation:
+  type: article
+  title: >-
+    Plasma eccDNA profiles in COVID-19: increased abundance and associations with
+    genomic and reference-chromatin features
+  authors:
+    - given-names: Chengwen
+      family-names: Gao
+    - given-names: Zhe
+      family-names: Xu
+    - given-names: Xi
+      family-names: Peng
+    - given-names: Chuanhong
+      family-names: Wu
+    - given-names: Xiangzhong
+      family-names: Zhao
+    - given-names: Qian
+      family-names: Zhang
+    - given-names: Mingxuan
+      family-names: Wu
+    - given-names: Baokun
+      family-names: Wang
+    - given-names: Baiqiang
+      family-names: Xue
+    - given-names: Wenli
+      family-names: Yuan
+    - given-names: Haiyan
+      family-names: Song
+    - given-names: Xiangyu
+      family-names: Li
+    - given-names: Peng
+      family-names: Han
+    - given-names: Haitao
+      family-names: Niu
+    - given-names: Zhiqiang
+      family-names: Li
+  journal: "Journal of Advanced Research"
+  year: 2026
+  notes: "Manuscript ID JARE-D-26-04883. Update with volume, pages and DOI on acceptance."

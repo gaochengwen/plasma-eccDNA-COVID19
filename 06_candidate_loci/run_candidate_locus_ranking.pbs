@@ -1,0 +1,58 @@
+#!/bin/bash
+#PBS -N BCL3_PROCR_rank
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=32gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/BCL3
+PRIMARY=/gpfs/data/gao/Covid-eccDNA/Revise/eccGene
+ROBUST=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+CHROMATIN=/gpfs/data/gao/Covid-eccDNA/Revise/chromatin
+QUALITY="$ROOT/quality_filtered_eccGene"
+COVID_LINKS="$ROOT/input/artifact_covid"
+HC_LINKS="$ROOT/input/artifact_hc"
+METADATA="$PRIMARY/sample_metadata.tsv"
+
+mkdir -p "$ROOT/logs" "$ROOT/input" "$COVID_LINKS" "$HC_LINKS" "$QUALITY"
+cd "$ROOT"
+
+/gpfs/home/gaochengwen/bin/python3 "$ROOT/scripts/prepare_artifact_links.py" \
+    --metadata "$METADATA" \
+    --callset-dir "$ROBUST/callsets/circlemap_artifact_masked" \
+    --covid-dir "$COVID_LINKS" \
+    --hc-dir "$HC_LINKS"
+
+/gpfs/home/gaochengwen/bin/python3 "$PRIMARY/scripts/run_eccgene_reanalysis.py" \
+    --metadata /gpfs/data/gao/Covid-eccDNA/covid/sample_data.csv \
+    --covid-bed-dir "$COVID_LINKS" \
+    --hc-bed-dir "$HC_LINKS" \
+    --refgene /gpfs/data/gao/Covid-eccDNA/eccDNA_abundance3/refGene.txt \
+    --output-dir "$QUALITY" \
+    --main-definition junction
+
+/gpfs/home/gaochengwen/bin/python3 "$ROOT/scripts/rank_candidate_loci.py" \
+    --primary-eccgene-dir "$PRIMARY" \
+    --quality-eccgene-dir "$QUALITY" \
+    --sample-metadata "$METADATA" \
+    --artifact-callset-dir "$ROBUST/callsets/circlemap_artifact_masked" \
+    --go-obo "$ROOT/input/go-basic.obo" \
+    --goa-gaf "$ROOT/input/goa_human.gaf.gz" \
+    --enrichment-terms "$ROOT/input/eccGene_gProfiler_all_significant_terms.tsv" \
+    --cd14-h3k27ac "$CHROMATIN/peaks_hg38/CD14_H3K27ac.liftover.hg38.canonical.filtered.merged.bed" \
+    --cd14-h3k27me3 "$CHROMATIN/peaks_hg38/CD14_H3K27me3.liftover.hg38.canonical.filtered.merged.bed" \
+    --huvec-h3k27ac "$CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27ac.ENCFF426QFH.bed" \
+    --huvec-h3k27me3 "$CHROMATIN/encode_hg38/ENCODE_endothelial_cell_of_umbilical_vein_H3K27me3.ENCFF938HVH.bed" \
+    --output-dir "$ROOT"
+
+sha256sum \
+    "$ROOT/scripts/prepare_artifact_links.py" \
+    "$ROOT/scripts/rank_candidate_loci.py" \
+    "$ROOT/run_candidate_locus_ranking.pbs" \
+    > "$ROOT/code_checksums.sha256"
+
+echo "BCL3/PROCR objective locus-ranking analysis complete."

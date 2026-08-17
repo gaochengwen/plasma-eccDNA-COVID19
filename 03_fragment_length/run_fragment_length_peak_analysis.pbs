@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -N ecc_len_peaks
+#PBS -q batch
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=24gb
+#PBS -l walltime=06:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/fragment-length/logs/qsub_fragment_length_peak_analysis.log
+
+set -euo pipefail
+
+ANALYSIS_ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/fragment-length
+cd "$ANALYSIS_ROOT"
+
+python3 scripts/run_fragment_length_peak_analysis.py \
+  --metadata /gpfs/data/gao/Covid-eccDNA/Revise/EPM/input/sample_metadata.tsv \
+  --covid-bed-dir /gpfs/data/gao/Covid-eccDNA/covid \
+  --hc-bed-dir /gpfs/data/gao/Covid-eccDNA/normal \
+  --output-dir "$ANALYSIS_ROOT" \
+  --bootstrap-iterations 1000 \
+  --subsample-repeats 100 \
+  --subsample-count 4000 \
+  --seed 20260729

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#PBS -N CF_pilot_QC
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=8gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -V
+
+set -euo pipefail
+
+ROOT=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder
+/public/opt/miniforge3_2024/bin/python \
+  "$ROOT/scripts/validate_circlefinder_runs.py" \
+  --root "$ROOT" \
+  --manifest /gpfs/data/gao/Covid-eccDNA/Revise/chromatin/inputs/eccdna_sample_manifest.tsv \
+  --sample-filter "$ROOT/config/pilot_samples.tsv" \
+  --label pilot \
+  >> "$ROOT/logs/validate_circlefinder_pilot.log" 2>&1

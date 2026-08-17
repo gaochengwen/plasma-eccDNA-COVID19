@@ -1,0 +1,27 @@
+# Local (workstation) environment: figure regeneration, auditing, verification.
+#
+# The compute-heavy analyses ran on the PBS cluster under Python 3.10.13 /
+# NumPy 2.2.6 / SciPy 1.13.1 / Matplotlib 3.9.0. Both environments are recorded
+# in env/software_versions.tsv.
+#
+#   conda env create -f env/environment.yml
+#   conda activate eccdna-covid
+
+name: eccdna-covid
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9.25
+  - numpy=2.0.2
+  - scipy=1.13.1
+  - matplotlib=3.9.4
+  - pandas=2.3.3
+  - statsmodels=0.14.6
+  - openpyxl=3.1.5
+  - lxml
+  - pip
+  - pip:
+      - python-docx==1.1.2
+      - pymupdf>=1.24
+      - pypdf>=4.0
+      - pillow>=10.0

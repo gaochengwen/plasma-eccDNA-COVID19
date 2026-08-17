@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Job scheduler artefacts
+*.o[0-9]*
+*.e[0-9]*
+*.pbs.o*
+*.pbs.e*
+*.done
+logs/
+
+# Result artefacts are not tracked in this repository — see README "Data availability"
+*.bed
+*.bam
+*.bam.bai
+*.fastq
+*.fastq.gz
+*.bw
+*.bigWig
+*.tsv.gz
+
+.DS_Store
+.ipynb_checkpoints/

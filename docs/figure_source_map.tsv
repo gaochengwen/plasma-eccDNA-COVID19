@@ -1,0 +1,27 @@
+figure	generator_script	generator_own_output_name	how_mapping_was_confirmed	notes
+Figure 1a	(none)	-	-	Workflow schematic; drawn in Adobe Illustrator 29.0, no scripted generator.
+Figure 1b	10_figures/rebuild_illustrator_panels_v2.py	Figure_1b_v2	panel geometry matched to the submitted artwork	Per-sample total eccDNA counts. Page layout assembled in Illustrator; this script produces the replacement data panel only.
+Figure 1c	10_figures/rebuild_illustrator_panels_v2.py	Figure_1c_v2	panel geometry matched to the submitted artwork	Normalized eccDNA abundance (EPM).
+Figure 1d	03_fragment_length/run_fragment_length_peak_analysis.py	Figure_1D_fragment_length_peaks	direct module output	Fragment-length density and consensus peaks; usable as a drop-in replacement panel.
+Figure 1e	10_figures/rebuild_illustrator_panels_v2.py	Figure_1e_v2	panel geometry matched to the submitted artwork	-
+Figure 2a	(none)	-	-	Schematic; Illustrator.
+Figure 2b	10_figures/rebuild_illustrator_panels_v2.py	Figure_2b_v2	panel geometry matched to the submitted artwork	Per-sample chromosome distribution; statistics from 02_eccdna_quantification/genomic_distribution.py.
+Figure 2c	(none)	-	-	Schematic; Illustrator.
+Figure 2d	10_figures/rebuild_illustrator_panels_v2.py	Figure_2d_v2	panel geometry matched to the submitted artwork	Gene-element observed/expected. The overlap rule changed between v1 and v2 (start coordinate vs interval intersection); see docs/call_sets.md amendment A4.
+Figure 3a	10_figures/rebuild_illustrator_panels_v2.py	Figure_3a_v2	panel geometry matched to the submitted artwork	Differentially abundant eccGenes.
+Figure 3b	10_figures/rebuild_illustrator_panels_v2.py	Figure_3b_v2	panel geometry matched to the submitted artwork	-
+Figure 3c	(none)	-	-	Metascape web-service output; term-level export not scriptable here. The g:Profiler confirmation is re-derivable via 05_eccgene/add_enrichment_materials.py.
+Figure 3d	10_figures/rebuild_figure_3d_panel_v2.py	Figure_3d_v2	panel geometry matched to the submitted artwork	Recurrent COVID-19-specific exact intervals; 27 in v1, 16 under the methods call set. Panel data from 10_figures/build_figure_3d_panel_data_v2.py.
+Figure 4	07_chromatin/make_figure4new.py	Figure_4	content-level fidelity gate (1,469 printed characters identical)	Byte-level gate unavailable: the submitted PDF was produced by matplotlib 3.11.0, absent from both environments.
+Figure 5a-c	07_chromatin/make_figure5_locked_abc_statistical_de.py	-	locked approved panels	Locus-level panels; inputs from 07_chromatin/figure5_*.pbs and 06_candidate_loci ranking.
+Figure 5 (layout)	07_chromatin/make_figure5_reference_layout.py	-	-	Imports make_main_figures and make_locus_panels as libraries.
+Figure S1	10_figures/create_figure_s1_redesigned.py	Figure_S1_redesigned	byte-level fidelity gate	Age-matched sensitivity. Pairing read from age_matched_pairs.json, not derived here.
+Figure S2	03_fragment_length/rebuild_figure_s2_panel_b.py	Figure_S2	pixel-level fidelity gate, mean grey delta 0.451	Fragment-length peak robustness. Peak P4 moved from 760 bp / HC 66.8% to 764 bp / 66.3%.
+Figure S3	10_figures/create_figure_s2.py	Figure_S2	byte-level fidelity gate	RCA technical bias. NOTE the filename mismatch: the script writes Figure_S2, which is submitted as Figure S3.
+Figure S4	10_figures/create_figure_s4.py	Figure_S4_callset_robustness	byte-level fidelity gate	Call-set robustness. No numerical change under v2.
+Figure S5	10_figures/create_figure_s9_clinical_correlates.py	Figure_S9	-	Clinical correlates. NOT reproducible end to end: this script only reads pre-computed tables A2-A5. Their v2 generator is 09_clinical_correlates/clinical_correlates_v2.py; v2 rendering is driven by 10_figures/build_figure_s5_v2.py.
+Figure S6	10_figures/create_eccgene_revision_figures.py	Figure_S3	byte-level fidelity gate	Gene-assignment sensitivity. NOTE the filename mismatch: writes Figure_S3, submitted as Figure S6.
+Figure S7	10_figures/create_circlemap_robustness_figures.py	Figure_S7	content-level fidelity gate	Downstream robustness across call sets. The same script's Figure_S6 output corresponds to no submitted figure. Submitted PDF produced by matplotlib 3.11.0, so byte-level gating was unavailable.
+Figure S8	07_chromatin/run_p0_burden_control.py	Figure_S4	byte-level fidelity gate	Burden controls. NOTE the filename mismatch: writes Figure_S4, submitted as Figure S8. 78 values changed under v2.
+Figure S9	07_chromatin/make_figure_s5.py	figure_s5_crosscell_mappability	byte-level fidelity gate	Cross-cell-type and mappability extensions. NOTE the filename mismatch.
+Graphical abstract	10_figures/create_graphical_abstract.py	Graphical_abstract	-	-

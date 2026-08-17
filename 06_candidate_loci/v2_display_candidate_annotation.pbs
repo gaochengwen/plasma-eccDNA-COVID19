@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+#PBS -N v2_display_annot
+#PBS -q batch
+#PBS -l nodes=cu16:ppn=2
+#PBS -l mem=32gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -o /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs/pbs_spool_display_annot.log
+#PBS -V
+#
+# S2 branch C4 -- chromatin display annotation of the ranked candidate loci.
+#
+# This produces chromatin_display_candidate_ranking.tsv and
+# chromatin_display_selection_criteria.tsv, which are the two inputs
+# build_locus_selection_supplementary_table.py needs for Supplementary
+# Table S20 ("Auditable selection evidence for candidate eccGene loci").
+#
+# In v1 this step was run by hand -- no PBS script committed it -- which is why
+# the two tables were missing from the v2 tree after the ranking job finished.
+# It is scripted here so the v2 chain is reproducible end to end.
+#
+# Note on scope: the submitted manuscript has no Figure 5 and states that no
+# candidate locus is displayed in any main figure. The Selected_for_Figure_5_display
+# column is therefore audit metadata for Table S20, not a figure instruction.
+#
+# Node is pinned. cu19 reports state=free but has not executed a job in ~20
+# days; everything scheduled onto it dies with Exit_status=-2, zero walltime
+# and no log.
+
+set -uo pipefail
+
+V2LOGS=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/downstream/circlemap_methods/logs
+mkdir -p "$V2LOGS"
+STAMP=$(date +%Y%m%d_%H%M%S)
+LOG="$V2LOGS/display_candidate_annotation.${STAMP}.log"
+exec > "$LOG" 2>&1
+set -x
+
+source /gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/v2_env.sh
+MARKER="$V2ROOT/logs/display_candidate_annotation.done"
+SCRIPTS_PATCHED=/gpfs/data/gao/Covid-eccDNA/Revise/Circle_finder/v2_scripts/patched
+RANKING="$V2ROOT/BCL3/tables/category_candidate_rankings.tsv"
+OUT="$V2ROOT/BCL3/tables/chromatin_display_candidate_ranking.tsv"
+CRITERIA="$V2ROOT/BCL3/tables/chromatin_display_selection_criteria.tsv"
+
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+module load Miniforge3_2024 >/dev/null 2>&1 || true
+rm -f "$MARKER"
+set +x
+
+echo "host=$(hostname)"
+echo "start=$(date -u +%FT%TZ)"
+
+test -s "$RANKING"
+test -s /gpfs/data/gao/Covid-eccDNA/eccDNA_abundance3/refGene.txt
+test -d "$V2ROOT/chromatin/peaks_hg38"
+echo "input_gate=PASS"
+echo "ranking_rows=$(($(wc -l < "$RANKING") - 1))"
+
+"$PYTHON_BIN" -u "$SCRIPTS_PATCHED/annotate_chromatin_display_candidates.py" \
+    --ranking "$RANKING" \
+    --refgene /gpfs/data/gao/Covid-eccDNA/eccDNA_abundance3/refGene.txt \
+    --peaks-dir "$V2ROOT/chromatin/peaks_hg38" \
+    --out "$OUT" \
+    --criteria-out "$CRITERIA" \
+    --flank-bp 1500
+
+echo "end=$(date -u +%FT%TZ)"
+
+test -s "$OUT"
+test -s "$CRITERIA"
+out_rows=$(($(wc -l < "$OUT") - 1))
+rank_rows=$(($(wc -l < "$RANKING") - 1))
+echo "out_rows=$out_rows ranking_rows=$rank_rows"
+# The annotator annotates in place: one output row per ranked candidate row.
+test "$out_rows" -eq "$rank_rows"
+{
+    echo "PASS"
+    echo "candidate_category_assignments=$out_rows"
+    echo "output=$OUT"
+    echo "criteria=$CRITERIA"
+    echo "completed_utc=$(date -u +%FT%TZ)"
+} > "$MARKER"
