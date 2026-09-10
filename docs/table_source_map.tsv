@@ -10,13 +10,12 @@ Table S8	Fragment-size sensitivity across call sets	01_callsets_and_robustness/r
 Table S9	Association of plasma eccDNA burden with clinical and laboratory variables in the COVID-19 cohort	09_clinical_correlates/clinical_correlates_v2.py	Authoritative generator for the clinical block and for sub-tables A1-A6. Confidence intervals are 5,000-resample percentile bootstrap under a fixed seed.
 Table S10	Chromosome-normalized eccDNA fractions	02_eccdna_quantification/genomic_distribution.py	-
 Table S11	EccDNA mapping ratios across repeat classes	02_eccdna_quantification/run_epm_reanalysis.py	Deliberately NOT migrated to v2: the source analysis runs on BAM reads, which are identical under both call sets.
-Table S12	EccDNA distributions across gene features	02_eccdna_quantification/genomic_distribution.py	-
-Table S13	Gene-feature observed/expected enrichment	02_eccdna_quantification/genomic_distribution.py	The overlap rule follows the Methods (see docs/call_sets.md, amendment A4).
-Table S14	Differentially abundant eccGenes	05_eccgene/run_eccgene_reanalysis.py	Significant set 3,402 genes (v1) to 3,487 (v2); this is the only sheet whose row count changes.
-Table S15	EccGene and chromatin robustness across call sets	01_callsets_and_robustness/summarize_downstream_robustness.py	-
-Table S16	Validation-target support and breakpoint artifact audit	01_callsets_and_robustness/audit_validation_target_masks.py	Five targets audited computationally; three (CTNNA2, SDK1, TCF7L1) taken forward.
-Table S17	Chromatin overlap and enrichment analyses	07_chromatin/run_chromatin_hg38_analysis.py	Blocks S17b-g migrated to v2. S17a (peak-set provenance) is call-set independent and left alone.
-Table S18	Controls for cohort differences in detected eccDNA burden	07_chromatin/run_p0_burden_control.py	Blocks S18a/c/e/f migrated: downsampling, burden window, HC3 covariate adjustment and Spearman burden controls.
-Table S19	Cross-cell-type chromatin and mappability controls	07_chromatin/run_chromatin_extensions.py	Blocks S19b/d migrated. S19a/S19c (mappability provenance) are call-set independent.
-Table S20	Auditable selection evidence for candidate eccGene loci	06_candidate_loci/rank_candidate_loci.py; build_ranking_workbook.py; build_locus_selection_supplementary_table.py	Prespecified eligibility screen; the display loci follow from the ranking, not the other way round.
-Table S21	Non-COVID pneumonia samples collected but not sequenced in this study	09_clinical_correlates/build_table_s21.py	-
+Table S12	Gene-feature observed/expected enrichment	02_eccdna_quantification/genomic_distribution.py	The overlap rule follows the Methods (see docs/call_sets.md, amendment A4).
+Table S13	Differentially abundant eccGenes	05_eccgene/run_eccgene_reanalysis.py	Significant set 3,402 genes (v1) to 3,487 (v2); this is the only sheet whose row count changes.
+Table S14	EccGene and chromatin robustness across call sets	01_callsets_and_robustness/summarize_downstream_robustness.py	-
+Table S15	Validation-target support and breakpoint artifact audit	01_callsets_and_robustness/audit_validation_target_masks.py	Five targets audited computationally; three (CTNNA2, SDK1, TCF7L1) taken forward.
+Table S16	Chromatin overlap and enrichment analyses	07_chromatin/run_chromatin_hg38_analysis.py	Blocks S17b-g migrated to v2. S17a (peak-set provenance) is call-set independent and left alone.
+Table S17	Controls for cohort differences in detected eccDNA burden	07_chromatin/run_p0_burden_control.py	Blocks S18a/c/e/f migrated: downsampling, burden window, HC3 covariate adjustment and Spearman burden controls.
+Table S18	Cross-cell-type chromatin and mappability controls	07_chromatin/run_chromatin_extensions.py	Blocks S19b/d migrated. S19a/S19c (mappability provenance) are call-set independent.
+Table S19	Auditable selection evidence for candidate eccGene loci	06_candidate_loci/rank_candidate_loci.py; build_ranking_workbook.py; build_locus_selection_supplementary_table.py	Prespecified eligibility screen; the display loci follow from the ranking, not the other way round.
+Table S20	Non-COVID pneumonia samples collected but not sequenced in this study	09_clinical_correlates/build_table_s21.py	-

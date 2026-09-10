@@ -137,7 +137,7 @@ Patient-derived sequence data — the aligned BAM files and the paired FASTQ rec
 derived from those alignments — are deposited in the Genome Sequence Archive under
 BioProject accession **PRJCA073440**. Per-sample eccDNA BED call sets are not
 distributed here. Processed results sufficient to re-derive every reported statistic
-are published as Supplementary Tables S1–S21 with the manuscript.
+are published as Supplementary Tables S1–S20 with the manuscript.
 
 Sample identifiers in the code (`NS*`, `SP*`, `XS*`, `ZXS*`) are de-identified study
 codes carrying no personal information; they match Supplementary Table S1.
