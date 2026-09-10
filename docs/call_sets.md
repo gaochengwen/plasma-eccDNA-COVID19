@@ -92,10 +92,10 @@ and the observed v2 value is recorded:
 
 | Script | Guard | v1 | v2 |
 |---|---|---|---|
-| `10_figures/create_eccgene_revision_figures.py` | enrichment set sizes | 3,094 / 26,642 | 3,189 / 26,087 |
-| `10_figures/create_figure_s1_redesigned.py` | stable peak positions | 196 / 365 / 571 bp | 196 / 366 / 571 bp |
+| eccGene figure generator (not deposited) | enrichment set sizes | 3,094 / 26,642 | 3,189 / 26,087 |
+| age-matched figure generator (not deposited) | stable peak positions | 196 / 365 / 571 bp | 196 / 366 / 571 bp |
 | `06_candidate_loci/annotate_chromatin_display_candidates.py` | display loci | HLA-E, MCAM | TFE3, MCAM |
-| `10_figures/create_circlemap_robustness_figures.py` | validation targets | CTNNA2, CAB39, chr22_target, SDK1 | CTNNA2, SDK1, TCF7L1 |
+| call-set robustness figure generator (not deposited) | validation targets | CTNNA2, CAB39, chr22_target, SDK1 | CTNNA2, SDK1, TCF7L1 |
 
 The last one is the most easily missed: a hard-coded target list had silently dropped
 TCF7L1. Promoting it to a module-level `VALIDATION_TARGETS` constant made the figure, its

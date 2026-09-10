@@ -55,6 +55,7 @@ FIG4_COVID_BOX = "#FF8080"
 FIG4_HC_BOX = "#8BABD3"
 FIG4_COVID_POINT = "#D70000"
 FIG4_HC_POINT = "#034E61"
+FIG4_POINT_MARKER = {GROUP_COVID: "^", GROUP_HC: "o"}
 
 DEFAULT_SEED = 20260729
 
@@ -1074,8 +1075,8 @@ def make_supplementary_figure(
     width = 0.22
     display = [
         ("Overall", OVERALL_COLOR),
-        (GROUP_COVID, COVID_COLOR),
-        (GROUP_HC, HC_COLOR),
+        (GROUP_COVID, FIG4_COVID_BOX),
+        (GROUP_HC, FIG4_HC_BOX),
     ]
     for offset_index, (dataset, color) in enumerate(display):
         values = [
@@ -1156,7 +1157,7 @@ def make_supplementary_figure(
                     position + rng.uniform(-0.075, 0.075, len(values)),
                     values,
                     s=5.2,
-                    marker="o",
+                    marker=FIG4_POINT_MARKER[group],
                     facecolor=point_color,
                     edgecolor="none",
                     alpha=0.88,

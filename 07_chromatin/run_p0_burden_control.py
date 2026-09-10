@@ -785,15 +785,15 @@ def make_p0_figure(dirs: base.Dirs) -> None:
 
     primary_target = int(down_stats["downsample_target"].min())
 
-    # Palette: exact Hex values extracted from Figure 4 (#36617B for HC, #C84F50 for COVID-19).
+    # Palette: exact Hex values extracted from Figure 1b/c (#034E61 for HC, #D70000 for COVID-19).
     # Cohort colours are fixed once and reused in every panel.
-    HC_COLOR, COVID_COLOR = "#36617B", "#C84F50"          # Extracted from Figure 4 (HC, COVID-19)
+    HC_COLOR, COVID_COLOR = "#034E61", "#D70000"          # Extracted from Figure 1b/c (HC, COVID-19)
     HC_FILL, COVID_FILL = "#A9BDC9", "#E6B0B0"            # 45% tints of the cohort inks for box faces
     # The three burden controls are one hue in three lightness steps, so the order of
     # increasing stringency is visible and the series stay separable in greyscale
     # without hatching. The nested models use the same idea in the COVID-19 hue.
     ANALYSIS = ["#9CC3C9", "#4E8E97", "#1E4F58"]
-    MODEL = ["#E9A9A6", "#C84F50", "#7B2A29"]
+    MODEL = ["#E9A9A6", "#D70000", "#7B2A29"]
     ZERO_LINE = "#8A93A3"
     STAR_COLOR = "#1A1A1A"                                 # one ink for every significance mark
     NOTE_COLOR = "#3F3F3F"

@@ -2,14 +2,15 @@
 
 Analysis code for the manuscript
 
-> **Plasma eccDNA profiles in COVID-19: increased abundance and associations with
-> genomic and reference-chromatin features**
+> **Plasma eccDNA profiling in COVID-19 reveals higher abundance and
+> immune-associated genomic patterns**
 > Manuscript ID **JARE-D-26-04883**
 
-This repository contains **code only**: the analysis, job-submission, quality-control
-and figure-generation scripts that produce every number, table and figure reported in
-the manuscript and its supplement. It contains no sequencing data, no per-sample eccDNA
-call sets and no result tables — see [Data availability](#data-availability).
+This repository contains **code only**: the analysis, job-submission and quality-control
+scripts that produce every number reported in the manuscript and its supplement.
+Figure-generation and supplementary-workbook assembly scripts are not deposited. It
+contains no sequencing data, no per-sample eccDNA call sets and no result tables —
+see [Data availability](#data-availability).
 
 ---
 
@@ -17,21 +18,19 @@ call sets and no result tables — see [Data availability](#data-availability).
 
 | Directory | Files | Contents |
 |---|---:|---|
-| [`workflow/`](workflow/) | 5 | Shared environment, the stage-2 submission orchestrator, and the write-protection harness used when re-running figure generators |
+| [`workflow/`](workflow/) | 4 | Shared environment, the stage-2 submission orchestrator and the marker-waiting helpers |
 | [`00_sequencing_qc/`](00_sequencing_qc/) | 4 | Per-sample `flagstat`, duplicate marking and sequencing-covariate models (Table S2) |
 | [`01_callsets_and_robustness/`](01_callsets_and_robustness/) | 30 | Circle_finder second caller, the seven-call-set strictness ladder, consensus building, artifact masking and the robustness synthesis |
 | [`02_eccdna_quantification/`](02_eccdna_quantification/) | 7 | EPM burden, chromosome distribution, gene-element observed/expected, and recurrent COVID-19-specific exact intervals |
-| [`03_fragment_length/`](03_fragment_length/) | 4 | Objective fragment-length peak calling, bootstrap stability and subsampling robustness |
+| [`03_fragment_length/`](03_fragment_length/) | 3 | Objective fragment-length peak calling, bootstrap stability and subsampling robustness |
 | [`04_rca_technical_bias/`](04_rca_technical_bias/) | 3 | Post-RCA yield, its correlates and the HC3 covariate models |
 | [`05_eccgene/`](05_eccgene/) | 4 | eccGene assignment under three definitions, abundance/detection endpoints, over-representation materials |
 | [`06_candidate_loci/`](06_candidate_loci/) | 10 | Prespecified eligibility screen and ranking used to choose display and validation loci |
-| [`07_chromatin/`](07_chromatin/) | 26 | hg38 liftOver, chromosome- and length-matched placement expectation, cross-cell-type and mappability extensions, burden controls, and the chromatin figure generators (they import the analysis module as a library, so they must stay beside it) |
+| [`07_chromatin/`](07_chromatin/) | 14 | hg38 liftOver, chromosome- and length-matched placement expectation, cross-cell-type and mappability extensions, and burden controls |
 | [`08_age_matching/`](08_age_matching/) | 2 | The age-matched subset and its sensitivity analysis |
 | [`09_clinical_correlates/`](09_clinical_correlates/) | 3 | Clinical annotation, correlates, strata and outcome analyses |
-| [`10_figures/`](10_figures/) | 19 | Non-chromatin figure generators and the fidelity-gated regeneration harnesses, plus the replacement data panels for the three hand-assembled main figures |
 | [`11_verification/`](11_verification/) | 10 | Cross-checks that every reported number agrees between tables, figures, manuscript and response letters |
-| [`12_supplementary_tables/`](12_supplementary_tables/) | 5 | Assembly of the 21-sheet supplementary workbook from the locked tables |
-| [`docs/`](docs/) | — | Source maps, call-set definitions, reference-file manifest, provenance and the pre-analysis declaration |
+| [`docs/`](docs/) | — | Table source map, call-set definitions, reference-file manifest, provenance and the pre-analysis declaration |
 | [`env/`](env/) | — | Interpreter and package versions for both execution environments |
 
 Every file records where it came from in the working analysis tree, with a SHA-256,
@@ -82,20 +81,17 @@ workflow/v2_env.sh                 # shared paths, seeds and resampling counts
                 ├── branch B  03_fragment_length, 04_rca_technical_bias
                 └── branch C  01_callsets_and_robustness (artifact-masked downstream)
                                   └── 06_candidate_loci (ranking; PBS afterok)
-                                            └── 07_chromatin figure5_*.pbs
 
 02_eccdna_quantification, 05_eccgene   # run on each call set via
                                        # 01_.../run_downstream_callset.pbs
 09_clinical_correlates                 # local, from the locked burden tables
-12_supplementary_tables                # assemble the 21-sheet workbook
-08_age_matching                        # AFTER stage 12: reads Table S2a
-10_figures                             # local, from the locked tables
+08_age_matching                        # reads Table S2a
 11_verification                        # last; must pass before anything ships
 ```
 
 Branches A, B and C are independent. The only cross-branch dependency is
-`figure5_*` → `rank_candidate_loci` → artifact-masked downstream, expressed with PBS
-`afterok`. Every job writes its own log and a `*.done` marker containing the number of
+`rank_candidate_loci` → artifact-masked downstream, expressed with PBS `afterok`.
+Every job writes its own log and a `*.done` marker containing the number of
 tables it produced.
 
 Long jobs are submitted with `qsub` only. No analysis is run inside an interactive SSH
@@ -113,8 +109,8 @@ Two environments were used and both are recorded in
 - **HPC (PBS cluster)** — Python 3.10.13, NumPy 2.2.6, SciPy 1.13.1, Matplotlib 3.9.0,
   on Linux 3.10.0 / glibc 2.17. All compute-heavy analyses.
 - **Local workstation** — Python 3.9.25, NumPy 2.0.2, SciPy 1.13.1, Matplotlib 3.9.4,
-  pandas 2.3.3, statsmodels 0.14.6, openpyxl 3.1.5. Figure regeneration, auditing and
-  consistency verification.
+  pandas 2.3.3, statsmodels 0.14.6, openpyxl 3.1.5. Auditing and consistency
+  verification.
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
@@ -148,16 +144,12 @@ SHA-256 checksums are in [`docs/reference_manifest.tsv`](docs/reference_manifest
 
 ---
 
-## Finding the code behind a figure or table
+## Finding the code behind a table
 
-Figure and supplementary numbering changed twice during revision, so **a script's own
-output filename is not a reliable guide to which submitted figure it makes**. The
-verified mapping is in:
-
-- [`docs/figure_source_map.tsv`](docs/figure_source_map.tsv) — every main and
-  supplementary figure, its generator, and how the mapping was confirmed
-- [`docs/table_source_map.tsv`](docs/table_source_map.tsv) — every supplementary table
-  and the script that builds it
+Supplementary numbering changed twice during revision, so **a script's own output
+filename is not a reliable guide to which submitted table it feeds**. The verified
+mapping from every supplementary table to the analysis that produces it is in
+[`docs/table_source_map.tsv`](docs/table_source_map.tsv).
 
 ---
 
@@ -165,23 +157,18 @@ verified mapping is in:
 
 These are stated so that no reader mistakes a gap for an error.
 
-- **Figures 1, 2 and 3** were assembled by hand in Adobe Illustrator 29.0 and have no
-  scripted generator for the page layout. The seven data panels (1b, 1c, 1e, 2b, 2d,
-  3a, 3b) *are* scripted, in `10_figures/rebuild_illustrator_panels_v2.py`, which
-  redraws them to the submitted geometry. Figure 1d comes from the fragment-length
-  module directly.
-- **Figure S5** cannot be rebuilt end to end. Its generator only reads the
-  pre-computed clinical tables A2–A5; the original code that produced A1–A6 exists
-  neither in this repository nor on the cluster. `09_clinical_correlates/clinical_correlates_v2.py`
-  is a documented re-implementation from the Methods, written under pre-declaration
-  amendments A3/A4, and is the authoritative generator going forward.
+- **Figure generators are not deposited.** Figures 1, 2 and 3 were in any case assembled
+  by hand in Adobe Illustrator 29.0 and have no scripted page layout. Every quantity
+  plotted in the main and supplementary figures comes from the analyses in this
+  repository and is tabulated in Supplementary Tables S1–S21.
+- **Figure S5 cannot be rebuilt end to end.** The original code that produced its
+  clinical tables A1–A6 exists neither here nor on the cluster.
+  `09_clinical_correlates/clinical_correlates_v2.py` is a documented re-implementation
+  from the Methods, written under pre-declaration amendments A3/A4, and is the
+  authoritative generator going forward.
 - **Figure 3c** plots a Metascape run made through the Metascape web service; its
   term-level export is not scriptable here. The g:Profiler confirmation reported
   alongside it is fully re-derivable from `05_eccgene/add_enrichment_materials.py`.
-- Several generators end by copying output to hard-coded absolute paths that later
-  renumbering made wrong. `workflow/protected_run.py` and the `sandbox()` helpers in
-  `10_figures/regen_figure_v2.py` and `regen_create_script.py` intercept those writes.
-  **Re-run figure generators through those harnesses, not directly.**
 - Some scripts hard-code v1 results as fatal assertions. This is deliberate — it is how
   the v2 differences were found. The patched copies make each guard configurable and
   record the observed v2 value; see the guard table in `docs/call_sets.md`.

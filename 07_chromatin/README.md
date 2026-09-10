@@ -1,11 +1,7 @@
 # 07 — chromatin association and burden controls
 
-All reference-chromatin analyses, plus the chromatin figure generators. Feeds
-**Figure 4**, **Figure 5**, **Figures S8, S9** and **Tables S17, S18, S19**.
-
-The figure scripts live here rather than in `10_figures/` because they import
-`run_chromatin_hg38_analysis` as a library via `sys.path.insert(<own directory>)` and
-must stay adjacent to it.
+All reference-chromatin analyses. Feeds **Figure 4**, **Figures S8, S9** and
+**Tables S17, S18, S19**.
 
 ## Analysis
 
@@ -18,19 +14,6 @@ must stay adjacent to it.
 | `validate_extensions_probabilities.py`, `validate_p0_per_circle_arrays.py` | Independent recomputation of the probability arrays. |
 | `rerun_chromatin_covariate_locally.py` | Local re-run of the covariate-adjusted table. |
 | `build_chromatin_supplementary_tables.py` | Format Tables S17–S19. |
-| `figure5_statistical_de.pbs`, `figure5_hlae_mcam.pbs`, `figure5_krt1_gp5.pbs` | Locus-level jobs feeding Figure 5. |
-
-## Figures
-
-| File | Produces |
-|---|---|
-| `make_figure4new.py` | Figure 4 |
-| `make_main_figures.py`, `make_locus_panels.py` | Shared plotting library for the locus panels |
-| `make_figure5_reference_layout.py`, `make_figure5_revised.py` | Figure 5 layout |
-| `make_figure5_locked_abc_reference_de.py`, `make_figure5_locked_abc_statistical_de.py` | Figure 5 panels a–c (locked, approved) |
-| `make_figure_s5.py` | Figure S9 (**note**: the script's own output name is `figure_s5_crosscell_mappability`) |
-| `make_figure_chromatin_merged.py` | Merged chromatin overview |
-| `run_p0_burden_control.py` | Figure S8 (**note**: writes `Figure_S4`) |
 
 ## Superseded
 

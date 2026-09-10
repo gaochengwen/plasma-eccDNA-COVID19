@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 title: >-
-  Analysis code for "Plasma eccDNA profiles in COVID-19: increased abundance and
-  associations with genomic and reference-chromatin features"
+  Analysis code for "Plasma eccDNA profiling in COVID-19 reveals higher abundance
+  and immune-associated genomic patterns"
 message: >-
   If you use this code, please cite the associated manuscript.
 type: software
