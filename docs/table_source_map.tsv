@@ -14,8 +14,8 @@ Table S12	Gene-feature observed/expected enrichment	02_eccdna_quantification/gen
 Table S13	Differentially abundant eccGenes	05_eccgene/run_eccgene_reanalysis.py	Significant set 3,402 genes (v1) to 3,487 (v2); this is the only sheet whose row count changes.
 Table S14	EccGene and chromatin robustness across call sets	01_callsets_and_robustness/summarize_downstream_robustness.py	-
 Table S15	Validation-target support and breakpoint artifact audit	01_callsets_and_robustness/audit_validation_target_masks.py	Five targets audited computationally; three (CTNNA2, SDK1, TCF7L1) taken forward.
-Table S16	Chromatin overlap and enrichment analyses	07_chromatin/run_chromatin_hg38_analysis.py	Blocks S17b-g migrated to v2. S17a (peak-set provenance) is call-set independent and left alone.
-Table S17	Controls for cohort differences in detected eccDNA burden	07_chromatin/run_p0_burden_control.py	Blocks S18a/c/e/f migrated: downsampling, burden window, HC3 covariate adjustment and Spearman burden controls.
-Table S18	Cross-cell-type chromatin and mappability controls	07_chromatin/run_chromatin_extensions.py	Blocks S19b/d migrated. S19a/S19c (mappability provenance) are call-set independent.
-Table S19	Auditable selection evidence for candidate eccGene loci	06_candidate_loci/rank_candidate_loci.py; build_ranking_workbook.py; build_locus_selection_supplementary_table.py	Prespecified eligibility screen; the display loci follow from the ranking, not the other way round.
+Table S16	Auditable selection evidence for candidate eccGene loci	06_candidate_loci/rank_candidate_loci.py; build_ranking_workbook.py; build_locus_selection_supplementary_table.py	Prespecified eligibility screen; the display loci follow from the ranking, not the other way round.
+Table S17	Chromatin overlap and enrichment analyses	07_chromatin/run_chromatin_hg38_analysis.py	Blocks S17b-g migrated to v2. S17a (peak-set provenance) is call-set independent and left alone.
+Table S18	Controls for cohort differences in detected eccDNA burden	07_chromatin/run_p0_burden_control.py	Blocks S18a/c/e/f migrated: downsampling, burden window, HC3 covariate adjustment and Spearman burden controls.
+Table S19	Cross-cell-type chromatin and mappability controls	07_chromatin/run_chromatin_extensions.py	Blocks S19b/d migrated. S19a/S19c (mappability provenance) are call-set independent.
 Table S20	Non-COVID pneumonia samples collected but not sequenced in this study	09_clinical_correlates/build_table_s21.py	-
