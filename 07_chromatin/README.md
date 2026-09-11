@@ -13,7 +13,6 @@ All reference-chromatin analyses. Feeds **Figure 4**, **Figures S8, S9** and
 | `run_p0_burden_control.py` + `p0_burden_control.pbs`, `v2_p0_burden_control.pbs` | Burden controls: within-group enrichment, the age-matched subset, HC3 covariate adjustment, depth downsampling, and the downsample-vs-full agreement check. |
 | `validate_extensions_probabilities.py`, `validate_p0_per_circle_arrays.py` | Independent recomputation of the probability arrays. |
 | `rerun_chromatin_covariate_locally.py` | Local re-run of the covariate-adjusted table. |
-| `build_chromatin_supplementary_tables.py` | Format Tables S17–S19. |
 
 ## Superseded
 

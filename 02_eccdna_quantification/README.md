@@ -1,7 +1,7 @@
 # 02 — eccDNA burden and genomic distribution
 
 Normalized abundance and where eccDNAs fall in the genome. Feeds **Figures 1b, 1c, 1e,
-2b, 2d, 3d** and **Tables S10, S11, S12, S13**.
+2b, 2d, 3d** and **Tables S10, S11, S12**.
 
 | File | Role |
 |---|---|

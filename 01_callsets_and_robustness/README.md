@@ -1,7 +1,7 @@
 # 01 — call sets and caller robustness
 
 Builds the seven-call-set strictness ladder and the robustness synthesis reported in
-**Tables S6–S8, S15, S16** and **Figures S4, S7**. See `docs/call_sets.md` for the
+**Tables S6–S8, S14, S15** and **Figures S4, S7**. See `docs/call_sets.md` for the
 definition of each call set.
 
 ## Circle_finder as an independent second caller
@@ -31,6 +31,5 @@ definition of each call set.
 | `summarize_downstream_robustness.py` + `v2_summarize_downstream.pbs` | Cross-call-set eccGene and chromatin concordance (feeds Figure S7). |
 | `audit_validation_target_masks.py` + `v2_target_mask_audit.pbs` | Audit the five validation targets against every prespecified mask; three go forward to the wet lab. |
 | `generate_final_report.py` / `.pbs` | Human-readable robustness report plus a checksum manifest. |
-| `build_circlemap_supplementary_tables.py` | Format Tables S6–S8 from the above. |
 | `collect_software_versions.sh` | Record tool versions at run time. |
 | `sync_final_results.sh` | Copy finalized results out of the scratch tree. |

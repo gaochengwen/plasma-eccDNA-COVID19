@@ -3,7 +3,7 @@
 An eccGene is annotated whenever a 1-bp Circle-Map junction coordinate falls within a
 merged UCSC hg38 refGene gene body. It is a **positional label**: it does not imply that
 an intact or functional gene is carried by the circle. Feeds **Figures 3a, 3b, S6** and
-**Table S14**.
+**Table S13**.
 
 | File | Role |
 |---|---|

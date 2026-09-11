@@ -8,9 +8,9 @@ Analysis code for the manuscript
 
 This repository contains **code only** — the analysis, job-submission and
 quality-control scripts behind every number reported in the manuscript and its
-supplement. Figure generators and supplementary-workbook assembly scripts are not
-deposited. There is no sequencing data, no per-sample eccDNA call set and no result
-table here; see [Data availability](#data-availability).
+supplement. The manuscript figure generators and the supplementary-workbook
+assembly scripts are not deposited. There is no sequencing data, no per-sample
+eccDNA call set and no result table here; see [Data availability](#data-availability).
 
 ---
 
@@ -20,13 +20,13 @@ table here; see [Data availability](#data-availability).
 |---|---:|---|
 | [`workflow/`](workflow/) | 4 | Shared environment, the stage-2 submission orchestrator and the marker-waiting helpers |
 | [`00_sequencing_qc/`](00_sequencing_qc/) | 4 | Per-sample `flagstat`, duplicate marking and sequencing-covariate models |
-| [`01_callsets_and_robustness/`](01_callsets_and_robustness/) | 30 | Circle_finder second caller, the seven-call-set strictness ladder, consensus building, artifact masking and the robustness synthesis |
+| [`01_callsets_and_robustness/`](01_callsets_and_robustness/) | 29 | Circle_finder second caller, the seven-call-set strictness ladder, consensus building, artifact masking and the robustness synthesis |
 | [`02_eccdna_quantification/`](02_eccdna_quantification/) | 7 | EPM burden, chromosome distribution, gene-element observed/expected, and recurrent COVID-19-specific exact intervals |
 | [`03_fragment_length/`](03_fragment_length/) | 3 | Objective fragment-length peak calling, bootstrap stability and subsampling robustness |
 | [`04_rca_technical_bias/`](04_rca_technical_bias/) | 3 | Post-RCA yield, its correlates and the HC3 covariate models |
 | [`05_eccgene/`](05_eccgene/) | 4 | eccGene assignment under three definitions, abundance and detection endpoints, over-representation materials |
-| [`06_candidate_loci/`](06_candidate_loci/) | 10 | Prespecified eligibility screen and ranking used to choose the validation loci |
-| [`07_chromatin/`](07_chromatin/) | 14 | hg38 liftOver, the chromosome- and length-matched placement expectation, cross-cell-type and mappability extensions, and burden controls |
+| [`06_candidate_loci/`](06_candidate_loci/) | 9 | Prespecified eligibility screen and ranking used to choose the validation loci |
+| [`07_chromatin/`](07_chromatin/) | 13 | hg38 liftOver, the chromosome- and length-matched placement expectation, cross-cell-type and mappability extensions, and burden controls |
 | [`08_age_matching/`](08_age_matching/) | 2 | The age-matched subset and its caliper sensitivity analysis |
 | [`09_clinical_correlates/`](09_clinical_correlates/) | 3 | Clinical annotation, correlates, strata and outcome analyses |
 | [`docs/`](docs/) | — | Table source map, call-set definitions, reference-file manifest, provenance and the pre-analysis declaration |

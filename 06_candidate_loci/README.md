@@ -2,7 +2,7 @@
 
 The prespecified screen that chooses which loci are displayed and which go to the wet
 lab. The ranking is computed first and the display loci follow from it — not the other
-way round. Feeds **Figure 5** and **Table S20**.
+way round. Feeds **Table S16**.
 
 | File | Role |
 |---|---|
@@ -12,7 +12,6 @@ way round. Feeds **Figure 5** and **Table S20**.
 | `annotate_chromatin_display_candidates.py` + `v2_display_candidate_annotation.pbs` | Apply a separate, explicitly recorded feasibility filter for display. Produces the ranking and selection-criteria tables. |
 | `build_ranking_workbook.py` | Assemble the auditable ranking workbook. |
 | `prepare_artifact_links.py` | Link each candidate to its artifact-mask evidence. |
-| `build_locus_selection_supplementary_table.py` | Format Table S20. |
 
 Under v2 the display loci changed from {HLA-E, MCAM} to {TFE3, MCAM}; the validation
 targets are CTNNA2, SDK1 and TCF7L1.
